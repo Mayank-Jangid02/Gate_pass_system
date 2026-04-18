@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, Navigate } from "react-router-dom";
 import { apiRequest } from "../lib/api.js";
 import { DEPARTMENTS } from "../lib/departments.js";
 
@@ -28,6 +28,16 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [adminExists, setAdminExists] = useState(null);
+
+  const userStr = localStorage.getItem("gp_user");
+  if (userStr) {
+    try {
+      const userObj = JSON.parse(userStr);
+      if (userObj.role === "student") return <Navigate to="/student" replace />;
+      if (userObj.role === "faculty") return <Navigate to="/faculty" replace />;
+      if (userObj.role === "admin") return <Navigate to="/admin" replace />;
+    } catch (e) {}
+  }
 
   const selected = SIGNUP_TYPES.find((t) => t.value === signupType);
 

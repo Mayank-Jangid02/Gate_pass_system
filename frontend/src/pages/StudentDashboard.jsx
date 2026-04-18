@@ -4,7 +4,6 @@ import { apiRequest } from "../lib/api.js";
 
 export default function StudentDashboard() {
   const [reason, setReason] = useState("");
-  const [leaveDate, setLeaveDate] = useState("");
   const [requestedFaculty, setRequestedFaculty] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [passes, setPasses] = useState([]);
@@ -66,12 +65,11 @@ export default function StudentDashboard() {
         method: "POST",
         body: JSON.stringify({
           reason,
-          leaveDate,
+          leaveDate: new Date().toISOString(),
           requestedFaculty,
         })
       });
       setReason("");
-      setLeaveDate("");
       setRequestedFaculty("");
       await loadPasses();
     } catch (err) {
@@ -120,7 +118,7 @@ export default function StudentDashboard() {
             Request New Gate Pass
           </h2>
           <p className="mt-1 text-xs text-slate-600">
-            Enter your reason and date/time for leaving campus.
+            Enter your reason for leaving campus.
           </p>
           <form className="mt-4 space-y-4" onSubmit={handleSubmit}>
             <div>
@@ -160,18 +158,7 @@ export default function StudentDashboard() {
                 </select>
               )}
             </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700">
-                Leaving Date &amp; Time
-              </label>
-              <input
-                type="datetime-local"
-                className="input mt-1"
-                value={leaveDate}
-                onChange={(e) => setLeaveDate(e.target.value)}
-                required
-              />
-            </div>
+
             {error && (
               <p className="text-sm text-red-600" role="alert">
                 {error}

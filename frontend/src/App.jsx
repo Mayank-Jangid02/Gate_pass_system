@@ -55,8 +55,11 @@ function Layout({ children }) {
               </span>
             )}
             {user ? (
-              <button onClick={handleLogout} className="btn-primary px-3 py-1.5 text-xs">
+              <button onClick={handleLogout} className="group btn-primary flex items-center gap-1.5 px-3 py-1.5 text-xs">
                 Logout
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
+                </svg>
               </button>
             ) : (
               <Link to="/login" className="btn-primary px-4 py-2 text-sm">

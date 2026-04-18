@@ -70,164 +70,236 @@ export default function FacultyDashboard() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col lg:flex-row gap-6 lg:h-[calc(100vh-8rem)]">
+      {/* Profile Sidebar */}
       {currentUser && (
-        <div className="card flex items-center gap-4 p-4">
-          {currentUser.profileImageUrl ? (
-            <img
-              src={currentUser.profileImageUrl}
-              alt={currentUser.name || "Profile"}
-              className="h-12 w-12 rounded-full object-cover"
-            />
-          ) : (
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-600 text-sm font-semibold text-white">
-              {initials}
+        <div className="lg:w-1/3 xl:w-1/4 h-full">
+          <div className="card flex flex-col p-4 sm:p-5 h-full rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-slate-100 bg-white relative group">
+            {/* Full width image container */}
+            <div className="w-full h-64 lg:h-72 relative overflow-hidden shrink-0 rounded-xl shadow-sm border border-slate-100 bg-slate-50">
+              {currentUser.profileImageUrl ? (
+                <img
+                  src={currentUser.profileImageUrl}
+                  alt={currentUser.name || "Profile"}
+                  className="w-full h-full object-cover transition-transform duration-500"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary-400 to-primary-600 transition-transform duration-500 relative">
+                  <svg className="w-24 h-24 text-white/50" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                  </svg>
+                  <div className="absolute inset-0 bg-black/5"></div>
+                </div>
+              )}
+              {/* Subtle inner shadow at the bottom of the image for smooth transition to content */}
+              <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-black/20 to-transparent pointer-events-none"></div>
             </div>
-          )}
-          <div>
-            <p className="text-sm font-semibold text-slate-900">
-              {currentUser.name}
-            </p>
-            <p className="text-xs text-slate-600">{currentUser.email}</p>
-            {currentUser.department && (
-              <p className="text-xs text-slate-600">
-                Department: {currentUser.department}
-              </p>
-            )}
+
+            {/* Card Content underneath the image */}
+            <div className="text-center w-full mt-6 flex-1 flex flex-col justify-center items-center relative z-10">
+              <h2 className="text-2xl font-bold text-slate-800 tracking-tight group-hover:text-primary-600 transition-colors duration-300">
+                {currentUser.name}
+              </h2>
+              <div className="mt-4 mb-4">
+                <span className="text-xs font-bold text-primary-600 uppercase tracking-wider bg-primary-50 px-5 py-2 rounded-full inline-block border border-primary-100 shadow-sm transition-transform duration-300 hover:scale-105">
+                  Faculty Member
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       )}
-      <div className="card p-5 sm:p-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex gap-2 border-b border-slate-200">
+
+      {/* Main Content Area */}
+      <div className="flex-1 h-full overflow-hidden">
+        <div className="card flex flex-col p-6 sm:p-8 h-full rounded-2xl shadow-sm border border-slate-100 bg-white transition-all duration-300 hover:shadow-md">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 shrink-0">
+            <div className="flex gap-6 border-b border-slate-100 w-full sm:w-auto">
+              <button
+                onClick={() => setViewMode("pending")}
+                className={`pb-3 px-1 text-sm font-semibold transition-all duration-300 relative ${viewMode === "pending"
+                  ? "text-primary-600"
+                  : "text-slate-400 hover:text-slate-600"
+                  }`}
+              >
+                Pending Requests
+                {viewMode === "pending" && (
+                  <span className="absolute bottom-0 left-0 w-full h-0.5 bg-primary-600 rounded-t-full"></span>
+                )}
+              </button>
+              <button
+                onClick={() => setViewMode("history")}
+                className={`pb-3 px-1 text-sm font-semibold transition-all duration-300 relative ${viewMode === "history"
+                  ? "text-primary-600"
+                  : "text-slate-400 hover:text-slate-600"
+                  }`}
+              >
+                Approval History
+                {viewMode === "history" && (
+                  <span className="absolute bottom-0 left-0 w-full h-0.5 bg-primary-600 rounded-t-full"></span>
+                )}
+              </button>
+            </div>
             <button
-              onClick={() => setViewMode("pending")}
-              className={`pb-2 px-1 text-sm font-medium ${viewMode === "pending"
-                  ? "border-b-2 border-primary-600 text-primary-600"
-                  : "text-slate-500 hover:text-slate-700"
-                }`}
+              onClick={viewMode === "pending" ? loadPending : loadHistory}
+              className="mt-4 sm:mt-0 px-4 py-2 text-xs font-semibold text-primary-600 bg-primary-50 hover:bg-primary-100 rounded-lg transition-colors duration-300 self-start sm:self-auto flex items-center gap-2 shadow-sm active:scale-95"
             >
-              Pending Requests
-            </button>
-            <button
-              onClick={() => setViewMode("history")}
-              className={`pb-2 px-1 text-sm font-medium ${viewMode === "history"
-                  ? "border-b-2 border-primary-600 text-primary-600"
-                  : "text-slate-500 hover:text-slate-700"
-                }`}
-            >
-              Approval History
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+              Refresh
             </button>
           </div>
-          <button
-            onClick={viewMode === "pending" ? loadPending : loadHistory}
-            className="text-xs font-medium text-primary-600 hover:underline self-end sm:self-auto"
-          >
-            Refresh
-          </button>
-        </div>
-        {error && (
-          <p className="mt-4 text-sm text-red-600" role="alert">
-            {error}
-          </p>
-        )}
-        {loading ? (
-          <p className="mt-4 text-sm text-slate-500">Loading...</p>
-        ) : viewMode === "pending" ? (
-          passes.length === 0 ? (
-            <p className="mt-4 text-sm text-slate-500">No pending requests.</p>
-          ) : (
-            <ul className="mt-4 space-y-3 text-sm">
-              {passes.map((p) => (
-                <li
-                  key={p._id}
-                  className="rounded-lg border border-slate-200 bg-slate-50 p-3"
-                >
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-semibold text-slate-900">
-                        {p.student?.name} &middot;{" "}
-                        <span className="text-xs text-slate-600">
-                          {p.student?.email}
-                        </span>
-                      </p>
-                      {p.student?.enrollmentNumber && (
-                        <p className="text-xs text-slate-500">
-                          Enrollment No: {p.student.enrollmentNumber}
-                        </p>
-                      )}
-                      <p className="mt-1 text-xs text-slate-600">
-                        Leave at: {new Date(p.leaveDate).toLocaleString()}
-                      </p>
-                      {p.expectedReturn && (
-                        <p className="mt-0.5 text-xs text-slate-600">
-                          Expected return:{" "}
-                          {new Date(p.expectedReturn).toLocaleString()}
-                        </p>
-                      )}
-                      <p className="mt-1 text-xs text-slate-700">{p.reason}</p>
-                    </div>
-                    <div className="flex flex-col gap-2 sm:flex-row">
-                      <button
-                        onClick={() => handleDecision(p._id, "APPROVED")}
-                        className="btn-primary px-3 py-1.5 text-xs"
-                      >
-                        Approve
-                      </button>
-                      <button
-                        onClick={() => handleDecision(p._id, "REJECTED")}
-                        className="inline-flex items-center justify-center rounded-lg border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-600 shadow-sm hover:bg-red-50"
-                      >
-                        Reject
-                      </button>
-                    </div>
+
+          {error && (
+            <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-100 text-sm text-red-600 flex items-center gap-3 shrink-0" role="alert">
+              <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
+              {error}
+            </div>
+          )}
+
+          {/* List Content */}
+          <div className="flex-1 overflow-y-auto pr-2">
+            {loading ? (
+              <div className="flex flex-col items-center justify-center py-12 h-full">
+                <div className="w-10 h-10 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"></div>
+                <p className="mt-4 text-sm font-medium text-slate-500 animate-pulse">Loading data...</p>
+              </div>
+            ) : viewMode === "pending" ? (
+              passes.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 text-center h-full">
+                  <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
+                    <svg className="w-8 h-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                   </div>
-                </li>
-              ))}
-            </ul>
-          )
-        ) : historyPasses.length === 0 ? (
-          <p className="mt-4 text-sm text-slate-500">No approval history.</p>
-        ) : (
-          <ul className="mt-4 space-y-3 text-sm">
-            {historyPasses.map((p) => (
-              <li
-                key={p._id}
-                className="rounded-lg border border-slate-200 bg-slate-50 p-3"
-              >
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900">
-                      {p.student?.name} &middot;{" "}
-                      <span className="text-xs text-slate-600">
-                        {p.student?.email}
-                      </span>
-                    </p>
-                    {p.student?.enrollmentNumber && (
-                      <p className="text-xs text-slate-500">
-                        Enrollment No: {p.student.enrollmentNumber}
-                      </p>
-                    )}
-                    <p className="mt-1 text-xs text-slate-600">
-                      Leave marked for: {new Date(p.leaveDate).toLocaleString()}
-                    </p>
-                    <p className="mt-0.5 text-xs text-slate-700">{p.reason}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs font-medium text-emerald-600 bg-emerald-50 inline-block px-2 py-1 rounded-md border border-emerald-200">
-                      Approved
-                    </p>
-                    {p.approvedAt && (
-                      <p className="mt-1 text-[10px] text-slate-500">
-                        on {new Date(p.approvedAt).toLocaleString()}
-                      </p>
-                    )}
-                  </div>
+                  <p className="text-base font-medium text-slate-600">No pending requests</p>
+                  <p className="mt-1 text-sm text-slate-400">All caught up! There are no students waiting for approval.</p>
                 </div>
-              </li>
-            ))}
-          </ul>
-        )}
+              ) : (
+                <ul className="space-y-4 pb-4">
+                  {passes.map((p) => (
+                    <li
+                      key={p._id}
+                      className="rounded-xl border border-slate-100 bg-white p-5 shadow-sm hover:shadow-md hover:border-primary-100 transition-all duration-300 group"
+                    >
+                      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-sm shrink-0">
+                              {p.student?.name?.charAt(0)?.toUpperCase() || "S"}
+                            </div>
+                            <div>
+                              <p className="text-base font-bold text-slate-800 group-hover:text-primary-600 transition-colors duration-200">
+                                {p.student?.name}
+                              </p>
+                              <p className="text-xs font-medium text-slate-500">
+                                {p.student?.enrollmentNumber ? `Enrl: ${p.student.enrollmentNumber}` : ''} {p.student?.email ? `• ${p.student.email}` : ''}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="pl-13 md:pl-0 mt-3 md:mt-4 grid grid-cols-1 xl:grid-cols-2 gap-3 text-sm">
+                            <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Leave Info</p>
+                              <p className="font-medium text-slate-700 flex items-start gap-2">
+                                <span className="text-slate-400">Out:</span> {new Date(p.leaveDate).toLocaleString()}
+                              </p>
+                              {p.expectedReturn && (
+                                <p className="font-medium text-slate-700 flex items-start gap-2 mt-1">
+                                  <span className="text-slate-400">In:</span> {new Date(p.expectedReturn).toLocaleString()}
+                                </p>
+                              )}
+                            </div>
+                            <div className="bg-orange-50/50 p-3 rounded-lg border border-orange-100/50">
+                              <p className="text-xs font-semibold text-orange-400 uppercase tracking-wider mb-1">Reason</p>
+                              <p className="font-medium text-slate-700 line-clamp-2" title={p.reason}>{p.reason}</p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex flex-row md:flex-col gap-2 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100 md:border-l md:pl-4 md:min-w-[120px]">
+                          <button
+                            onClick={() => handleDecision(p._id, "APPROVED")}
+                            className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 shadow-sm hover:shadow-md active:scale-95"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => handleDecision(p._id, "REJECTED")}
+                            className="flex-1 md:flex-none flex items-center justify-center gap-2 group/reject bg-white hover:bg-red-50 text-slate-600 hover:text-red-600 border border-slate-200 hover:border-red-200 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 shadow-sm hover:shadow-md active:scale-95"
+                          >
+                            <svg className="w-4 h-4 text-slate-400 group-hover/reject:text-red-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
+                            Reject
+                          </button>
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )
+            ) : historyPasses.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-center h-full">
+                <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
+                  <svg className="w-8 h-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                </div>
+                <p className="text-base font-medium text-slate-600">No approval history</p>
+                <p className="mt-1 text-sm text-slate-400">You haven't approved or rejected any requests yet.</p>
+              </div>
+            ) : (
+              <ul className="space-y-4 pb-4">
+                {historyPasses.map((p) => (
+                  <li
+                    key={p._id}
+                    className="rounded-xl border border-slate-100 bg-white p-5 shadow-sm hover:shadow-md hover:border-slate-200 transition-all duration-300 group"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-sm shrink-0">
+                            {p.student?.name?.charAt(0)?.toUpperCase() || "S"}
+                          </div>
+                          <div>
+                            <p className="text-base font-bold text-slate-800">
+                              {p.student?.name}
+                            </p>
+                            <p className="text-xs font-medium text-slate-500">
+                              {p.student?.enrollmentNumber ? `Enrl: ${p.student.enrollmentNumber}` : ''} {p.student?.email ? `• ${p.student.email}` : ''}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="mt-3 bg-slate-50 p-3 rounded-lg border border-slate-100 inline-block w-full sm:w-auto">
+                          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Leave Info</p>
+                          <p className="font-medium text-slate-700 text-sm flex items-center gap-2">
+                            <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            {new Date(p.leaveDate).toLocaleString()}
+                          </p>
+                          <p className="mt-2 text-sm text-slate-600"><span className="font-medium text-slate-700">Reason:</span> {p.reason}</p>
+                        </div>
+                      </div>
+                      <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-2 pt-3 sm:pt-0 border-t sm:border-t-0 border-slate-100 min-w-[140px]">
+                        <div className={`px-3 py-1.5 rounded-lg border flex items-center gap-2 font-semibold text-xs ${p.status === "APPROVED"
+                          ? "bg-emerald-50 text-emerald-600 border-emerald-100"
+                          : p.status === "REJECTED"
+                            ? "bg-red-50 text-red-600 border-red-100"
+                            : "bg-amber-50 text-amber-600 border-amber-100"
+                          }`}>
+                          {p.status === "APPROVED" && <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>}
+                          {p.status === "REJECTED" && <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>}
+                          {p.status === "PENDING" && <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+                          {p.status ? p.status.charAt(0).toUpperCase() + p.status.slice(1).toLowerCase() : "Approved"}
+                        </div>
+                        {p.approvedAt && (
+                          <p className="text-[11px] font-medium text-slate-400 text-right mt-1.5">
+                            {new Date(p.approvedAt).toLocaleString()}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

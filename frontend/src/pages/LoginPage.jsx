@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, Navigate } from "react-router-dom";
 import { apiRequest } from "../lib/api.js";
 
 const LOGIN_TYPES = [
@@ -15,6 +15,16 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const userStr = localStorage.getItem("gp_user");
+  if (userStr) {
+    try {
+      const userObj = JSON.parse(userStr);
+      if (userObj.role === "student") return <Navigate to="/student" replace />;
+      if (userObj.role === "faculty") return <Navigate to="/faculty" replace />;
+      if (userObj.role === "admin") return <Navigate to="/admin" replace />;
+    } catch (e) {}
+  }
 
   const selected = LOGIN_TYPES.find((t) => t.value === loginType);
 
