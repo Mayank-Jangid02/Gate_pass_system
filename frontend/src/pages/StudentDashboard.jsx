@@ -11,6 +11,8 @@ export default function StudentDashboard() {
   const [error, setError] = useState("");
   const [facultyList, setFacultyList] = useState([]);
   const [facultyLoading, setFacultyLoading] = useState(true);
+  const [aiSuggesting, setAiSuggesting] = useState(false);
+  const [suggestedFacultyIds, setSuggestedFacultyIds] = useState([]);
 
   const currentUser = (() => {
     const stored = localStorage.getItem("gp_user");
@@ -56,6 +58,30 @@ export default function StudentDashboard() {
     loadFaculty();
   }, []);
 
+  const handleGetAISuggestion = async () => {
+    setAiSuggesting(true);
+    setError("");
+    setSuggestedFacultyIds([]);
+    try {
+      // Use current time
+      const targetDate = new Date().toISOString();
+      const data = await apiRequest("/ai/suggest-faculty", {
+        method: "POST",
+        body: JSON.stringify({ leaveDate: targetDate }),
+      });
+      setSuggestedFacultyIds(data.suggestedFacultyIds || []);
+      
+      // Auto-select the first suggested faculty if none selected
+      if (!requestedFaculty && data.suggestedFacultyIds?.length > 0) {
+        setRequestedFaculty(data.suggestedFacultyIds[0]);
+      }
+    } catch (err) {
+      setError("AI Suggestion failed: " + err.message);
+    } finally {
+      setAiSuggesting(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -71,6 +97,7 @@ export default function StudentDashboard() {
       });
       setReason("");
       setRequestedFaculty("");
+      setSuggestedFacultyIds([]);
       await loadPasses();
     } catch (err) {
       setError(err.message);
@@ -132,10 +159,22 @@ export default function StudentDashboard() {
                 required
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700">
-                Request to (faculty in your department)
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="block text-sm font-medium text-slate-700">
+                  Request to (faculty in your department)
+                </label>
+                <button
+                  type="button"
+                  onClick={handleGetAISuggestion}
+                  disabled={aiSuggesting || facultyLoading || facultyList.length === 0}
+                  className="text-xs font-semibold text-primary-600 hover:text-primary-700 flex items-center gap-1 disabled:opacity-50"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v8l9-11h-7z" />
+                  </svg>
+                  {aiSuggesting ? "Suggesting..." : "AI Suggest Free Faculty"}
+                </button>
+              </div>
               {facultyLoading ? (
                 <p className="mt-1 text-xs text-slate-500">Loading...</p>
               ) : facultyList.length === 0 ? (
@@ -150,14 +189,16 @@ export default function StudentDashboard() {
                   required
                 >
                   <option value="">Select faculty...</option>
-                  {facultyList.map((f) => (
-                    <option key={f._id} value={f._id}>
-                      {f.name} ({f.email})
-                    </option>
-                  ))}
+                  {facultyList.map((f) => {
+                    const isSuggested = suggestedFacultyIds.includes(f._id);
+                    return (
+                      <option key={f._id} value={f._id} className={isSuggested ? "font-bold text-primary-700" : ""}>
+                        {f.name} ({f.email}) {isSuggested ? " - ⭐ AI Suggested (Free)" : ""}
+                      </option>
+                    );
+                  })}
                 </select>
               )}
-            </div>
 
             {error && (
               <p className="text-sm text-red-600" role="alert">

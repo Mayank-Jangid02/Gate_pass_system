@@ -6,7 +6,9 @@ export default function FacultyDashboard() {
   const [historyPasses, setHistoryPasses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [viewMode, setViewMode] = useState("pending"); // "pending" | "history"
+  const [viewMode, setViewMode] = useState("pending"); // "pending" | "history" | "timetable"
+  const [timetable, setTimetable] = useState("");
+  const [savingTimetable, setSavingTimetable] = useState(false);
 
   const currentUser = (() => {
     const stored = localStorage.getItem("gp_user");
@@ -49,11 +51,73 @@ export default function FacultyDashboard() {
     }
   };
 
+  const loadTimetable = async () => {
+    try {
+      setError("");
+      setLoading(true);
+      const data = await apiRequest("/faculty/timetable");
+      setTimetable(data.timetable || "");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveTimetable = async (e) => {
+    e.preventDefault();
+    setSavingTimetable(true);
+    setError("");
+    try {
+      await apiRequest("/faculty/timetable", {
+        method: "PUT",
+        body: JSON.stringify({ timetable }),
+      });
+      alert("Timetable saved successfully!");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSavingTimetable(false);
+    }
+  };
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const text = event.target.result;
+      setTimetable(text);
+      
+      // Auto-save when file is uploaded
+      setSavingTimetable(true);
+      setError("");
+      try {
+        await apiRequest("/faculty/timetable", {
+          method: "PUT",
+          body: JSON.stringify({ timetable: text }),
+        });
+        alert("Timetable uploaded and saved successfully!");
+      } catch (err) {
+        setError("Failed to save uploaded timetable: " + err.message);
+      } finally {
+        setSavingTimetable(false);
+      }
+    };
+    reader.onerror = () => {
+      setError("Failed to read file");
+    };
+    reader.readAsText(file);
+  };
+
   useEffect(() => {
     if (viewMode === "pending") {
       loadPending();
-    } else {
+    } else if (viewMode === "history") {
       loadHistory();
+    } else if (viewMode === "timetable") {
+      loadTimetable();
     }
   }, [viewMode]);
 
@@ -140,9 +204,25 @@ export default function FacultyDashboard() {
                   <span className="absolute bottom-0 left-0 w-full h-0.5 bg-primary-600 rounded-t-full"></span>
                 )}
               </button>
+              <button
+                onClick={() => setViewMode("timetable")}
+                className={`pb-3 px-1 text-sm font-semibold transition-all duration-300 relative ${viewMode === "timetable"
+                  ? "text-primary-600"
+                  : "text-slate-400 hover:text-slate-600"
+                  }`}
+              >
+                My Timetable
+                {viewMode === "timetable" && (
+                  <span className="absolute bottom-0 left-0 w-full h-0.5 bg-primary-600 rounded-t-full"></span>
+                )}
+              </button>
             </div>
             <button
-              onClick={viewMode === "pending" ? loadPending : loadHistory}
+              onClick={() => {
+                if (viewMode === "pending") loadPending();
+                else if (viewMode === "history") loadHistory();
+                else loadTimetable();
+              }}
               className="mt-4 sm:mt-0 px-4 py-2 text-xs font-semibold text-primary-600 bg-primary-50 hover:bg-primary-100 rounded-lg transition-colors duration-300 self-start sm:self-auto flex items-center gap-2 shadow-sm active:scale-95"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
@@ -235,7 +315,8 @@ export default function FacultyDashboard() {
                   ))}
                 </ul>
               )
-            ) : historyPasses.length === 0 ? (
+            ) : viewMode === "history" ? (
+              historyPasses.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center h-full">
                 <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
                   <svg className="w-8 h-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -297,6 +378,39 @@ export default function FacultyDashboard() {
                   </li>
                 ))}
               </ul>
+            ) ) : (
+              <div className="h-full flex flex-col">
+                <div className="mb-4">
+                  <h3 className="text-lg font-semibold text-slate-800">Manage Your Timetable</h3>
+                  <p className="text-sm text-slate-500 mt-1">
+                    Describe your weekly schedule (e.g., "Monday: 9-11 AM busy, 1-3 PM class"). 
+                    The AI will use this to suggest you when you are free.
+                  </p>
+                </div>
+                <div className="flex-1 flex flex-col justify-center items-center p-6 border-2 border-dashed border-slate-300 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors">
+                  <svg className="w-12 h-12 text-slate-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <label className="cursor-pointer text-center">
+                    <span className="block text-sm font-semibold text-primary-600 hover:text-primary-700">Upload a text file</span>
+                    <span className="block mt-1 text-xs text-slate-500">(.txt, .csv, .md)</span>
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept=".txt,.csv,.md"
+                      onChange={handleFileUpload}
+                      disabled={savingTimetable}
+                    />
+                  </label>
+                  {savingTimetable && <p className="mt-4 text-sm text-primary-600 font-medium animate-pulse">Uploading and saving...</p>}
+                  {!savingTimetable && timetable && (
+                    <div className="mt-6 w-full p-4 bg-white border border-slate-200 rounded-lg">
+                      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Current Timetable Preview:</p>
+                      <pre className="text-sm text-slate-700 whitespace-pre-wrap font-sans">{timetable}</pre>
+                    </div>
+                  )}
+                </div>
+              </div>
             )}
           </div>
         </div>

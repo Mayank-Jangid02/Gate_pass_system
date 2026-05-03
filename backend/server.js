@@ -6,6 +6,8 @@ import cors from "cors";
 import authRoutes from "./src/routes/auth.js";
 import passRoutes from "./src/routes/pass.js";
 import adminRoutes from "./src/routes/admin.js";
+import aiRoutes from "./src/routes/ai.js";
+import facultyRoutes from "./src/routes/faculty.js";
 
 dotenv.config();
 
@@ -23,6 +25,8 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/passes", passRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/ai", aiRoutes);
+app.use("/api/faculty", facultyRoutes);
 
 mongoose
   .connect(MONGO_URI, { autoIndex: true })

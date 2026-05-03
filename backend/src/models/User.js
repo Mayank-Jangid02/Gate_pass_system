@@ -16,6 +16,8 @@ const userSchema = new mongoose.Schema(
     enrollmentNumber: { type: String },
     // Profile image URL (student and faculty)
     profileImageUrl: { type: String },
+    // Free text timetable for faculty
+    timetable: { type: String, default: "" },
     isActive: { type: Boolean, default: true },
   },
   { timestamps: true }
