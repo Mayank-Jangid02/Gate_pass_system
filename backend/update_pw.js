@@ -1,7 +1,12 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
+import dotenv from 'dotenv';
 
-mongoose.connect('mongodb://127.0.0.1:27017/gatepass').then(async () => {
+dotenv.config();
+
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/gatepass';
+
+mongoose.connect(MONGO_URI).then(async () => {
   const db = mongoose.connection.db;
   const hash = await bcrypt.hash('meera@123', 10);
   await db.collection('users').updateOne({email: 'meera@gmail.com'}, {$set: {password: hash}});
