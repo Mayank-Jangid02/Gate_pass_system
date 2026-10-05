@@ -15,7 +15,18 @@ router.get("/admin-exists", async (req, res) => {
   }
 });
 
-// Student signup (email-based). Admin signup allowed only when no admin exists.
+// Check if security account exists (public, for signup page)
+router.get("/security-exists", async (req, res) => {
+  try {
+    const count = await User.countDocuments({ role: "security" });
+    res.json({ exists: count > 0 });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ exists: true });
+  }
+});
+
+// Student signup (email-based)
 router.post("/signup", async (req, res) => {
   try {
     const {
@@ -32,25 +43,18 @@ router.post("/signup", async (req, res) => {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    const signupRole = role === "admin" ? "admin" : "student";
-
-    // For students, department and enrollment number are required
-    if (signupRole === "student") {
-      if (!department || !enrollmentNumber) {
-        return res
-          .status(400)
-          .json({ message: "Department and enrollment number are required" });
-      }
+    if (role === "admin" || role === "security") {
+      return res.status(403).json({
+        message: "Admin and Security accounts cannot be created via public signup.",
+      });
     }
 
-    // Admin signup: only allow when no admin exists in the database
-    if (signupRole === "admin") {
-      const adminCount = await User.countDocuments({ role: "admin" });
-      if (adminCount > 0) {
-        return res.status(403).json({
-          message: "Admin account already exists. Please use the Login page.",
-        });
-      }
+    const signupRole = "student";
+
+    if (!department || !enrollmentNumber) {
+      return res
+        .status(400)
+        .json({ message: "Department and enrollment number are required" });
     }
 
     const existing = await User.findOne({ email });
@@ -115,9 +119,11 @@ router.post("/login", async (req, res) => {
           ? "Student"
           : user.role === "faculty"
           ? "Faculty"
+          : user.role === "security"
+          ? "Security"
           : "Admin";
       return res.status(403).json({
-        message: `This account is a ${pretty} account. Please use the ${pretty} login.`,
+        message: `This account is a ${pretty} account. Please select ${pretty} in "Login as".`,
       });
     }
 

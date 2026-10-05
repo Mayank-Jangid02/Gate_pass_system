@@ -5,6 +5,7 @@ import SignupPage from "./pages/SignupPage.jsx";
 import StudentDashboard from "./pages/StudentDashboard.jsx";
 import FacultyDashboard from "./pages/FacultyDashboard.jsx";
 import AdminDashboard from "./pages/AdminDashboard.jsx";
+import SecurityDashboard from "./pages/SecurityDashboard.jsx";
 import PassPrintPage from "./pages/PassPrintPage.jsx";
 
 function useAuth() {
@@ -151,6 +152,16 @@ export default function App() {
         }
       />
       <Route
+        path="/security"
+        element={
+          <Layout>
+            <ProtectedRoute allowed={["security"]}>
+              <SecurityDashboard />
+            </ProtectedRoute>
+          </Layout>
+        }
+      />
+      <Route
         path="/pass/:id"
         element={
           <Layout>
@@ -177,6 +188,7 @@ function HomeRouter() {
 
   if (user?.role === "student") return <Navigate to="/student" replace />;
   if (user?.role === "faculty") return <Navigate to="/faculty" replace />;
+  if (user?.role === "security") return <Navigate to="/security" replace />;
   if (user?.role === "admin") return <Navigate to="/admin" replace />;
 
   return (

@@ -157,6 +157,74 @@ router.patch(
   }
 );
 
+// Security: get all faculty-approved passes
+router.get(
+  "/security/approved",
+  authRequired,
+  requireRole("security"),
+  async (req, res) => {
+    try {
+      const passes = await PassRequest.find({ status: "APPROVED" })
+        .populate("student", "name email department enrollmentNumber profileImageUrl")
+        .populate("faculty", "name email")
+        .populate("requestedFaculty", "name email")
+        .sort({ approvedAt: -1, createdAt: -1 });
+      res.json(passes);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: "Failed to load security pass requests" });
+    }
+  }
+);
+
+// Security: update check-out or check-in verification status
+router.patch(
+  "/security/:id/verify",
+  authRequired,
+  requireRole("security"),
+  async (req, res) => {
+    try {
+      const { securityStatus, notes } = req.body;
+      if (!["CHECKED_OUT", "CHECKED_IN"].includes(securityStatus)) {
+        return res.status(400).json({ message: "Invalid security status" });
+      }
+
+      const pass = await PassRequest.findById(req.params.id);
+      if (!pass) {
+        return res.status(404).json({ message: "Pass not found" });
+      }
+      if (pass.status !== "APPROVED") {
+        return res
+          .status(400)
+          .json({ message: "Pass is not approved by faculty" });
+      }
+
+      pass.securityStatus = securityStatus;
+      if (securityStatus === "CHECKED_OUT") {
+        pass.securityCheckedOutAt = new Date();
+      } else if (securityStatus === "CHECKED_IN") {
+        pass.securityCheckedInAt = new Date();
+      }
+
+      if (notes !== undefined) {
+        pass.securityNotes = notes;
+      }
+
+      await pass.save();
+
+      const populated = await pass.populate([
+        { path: "student", select: "name email department enrollmentNumber profileImageUrl" },
+        { path: "faculty", select: "name email" },
+      ]);
+
+      res.json(populated);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: "Could not verify pass status" });
+    }
+  }
+);
+
 // Any authenticated user: view pass for printing (but we mainly use for student)
 router.get("/:id", authRequired, async (req, res) => {
   try {

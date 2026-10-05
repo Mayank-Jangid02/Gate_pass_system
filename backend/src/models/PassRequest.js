@@ -25,6 +25,15 @@ const passRequestSchema = new mongoose.Schema(
     },
     approvedAt: { type: Date },
     approvedByName: { type: String },
+    // Security verification tracking
+    securityStatus: {
+      type: String,
+      enum: ["PENDING_EXIT", "CHECKED_OUT", "CHECKED_IN"],
+      default: "PENDING_EXIT",
+    },
+    securityCheckedOutAt: { type: Date },
+    securityCheckedInAt: { type: Date },
+    securityNotes: { type: String, default: "" },
   },
   { timestamps: true }
 );

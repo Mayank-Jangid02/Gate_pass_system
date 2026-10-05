@@ -5,6 +5,7 @@ import { apiRequest } from "../lib/api.js";
 const LOGIN_TYPES = [
   { value: "student", label: "Student", description: "Request and track gate passes" },
   { value: "faculty", label: "Faculty", description: "Approve or reject student requests" },
+  { value: "security", label: "Security", description: "Verify faculty-approved passes and manage gate entry/exit" },
   { value: "admin", label: "Admin", description: "Manage faculty and monitor passes" },
 ];
 
@@ -22,6 +23,7 @@ export default function LoginPage() {
       const userObj = JSON.parse(userStr);
       if (userObj.role === "student") return <Navigate to="/student" replace />;
       if (userObj.role === "faculty") return <Navigate to="/faculty" replace />;
+      if (userObj.role === "security") return <Navigate to="/security" replace />;
       if (userObj.role === "admin") return <Navigate to="/admin" replace />;
     } catch (e) {}
   }
@@ -39,8 +41,9 @@ export default function LoginPage() {
       });
       localStorage.setItem("gp_token", data.token);
       localStorage.setItem("gp_user", JSON.stringify(data.user));
-      if (loginType === "student") navigate("/student");
-      else if (loginType === "faculty") navigate("/faculty");
+      if (data.user.role === "student") navigate("/student");
+      else if (data.user.role === "faculty") navigate("/faculty");
+      else if (data.user.role === "security") navigate("/security");
       else navigate("/admin");
     } catch (err) {
       setError(err.message);

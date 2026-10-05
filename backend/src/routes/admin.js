@@ -132,5 +132,102 @@ router.delete(
   }
 );
 
+// Admin: get active security account details
+router.get(
+  "/security",
+  authRequired,
+  requireRole("admin"),
+  async (req, res) => {
+    try {
+      const securityUser = await User.findOne({ role: "security", isActive: true }).select(
+        "name email role isActive createdAt"
+      );
+      res.json({ security: securityUser || null });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: "Failed to load security user" });
+    }
+  }
+);
+
+// Admin: create security account (only 1 active security account allowed)
+router.post(
+  "/security",
+  authRequired,
+  requireRole("admin"),
+  async (req, res) => {
+    try {
+      const { name, email, password } = req.body;
+      if (!name || !email || !password) {
+        return res
+          .status(400)
+          .json({ message: "Name, email, and password are required" });
+      }
+
+      // Enforce single active security account rule
+      const existingSecurity = await User.findOne({
+        role: "security",
+        isActive: true,
+      });
+      if (existingSecurity) {
+        return res.status(403).json({
+          message:
+            "A Security account already exists. Only one Security account is allowed at a time.",
+        });
+      }
+
+      const existingEmail = await User.findOne({ email });
+      if (existingEmail) {
+        return res.status(409).json({ message: "Email already in use" });
+      }
+
+      const securityUser = new User({
+        name,
+        email,
+        password,
+        role: "security",
+      });
+      await securityUser.save();
+
+      res.status(201).json({
+        id: securityUser._id,
+        name: securityUser.name,
+        email: securityUser.email,
+        role: securityUser.role,
+        isActive: securityUser.isActive,
+      });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: "Failed to create security account" });
+    }
+  }
+);
+
+// Admin: remove/deactivate security account
+router.delete(
+  "/security/:id",
+  authRequired,
+  requireRole("admin"),
+  async (req, res) => {
+    try {
+      const securityUser = await User.findOne({
+        _id: req.params.id,
+        role: "security",
+      });
+      if (!securityUser) {
+        return res.status(404).json({ message: "Security account not found" });
+      }
+
+      securityUser.isActive = false;
+      await securityUser.save();
+
+      res.json({ message: "Security account deactivated successfully" });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: "Failed to remove security account" });
+    }
+  }
+);
+
 export default router;
 
